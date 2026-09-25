@@ -3,6 +3,9 @@
 A fast, minimal voice/text journal + todo app. Plain HTML/CSS/JS, no framework, no
 build step. Runs on Cloudflare Pages with Pages Functions and D1.
 
+**Live:** https://thoughts-and-feelings-3y9.pages.dev (behind Cloudflare Access,
+restricted to dom.haughton@gmail.com)
+
 ## How it's built
 
 - `index.html`, `style.css`, `app.js` — the entire client. One hash-routed
@@ -70,57 +73,17 @@ git push
 
 ---
 
-## Setup steps still needed from you
+## Deployment status
 
-I don't have authenticated access to Cloudflare or GitHub from this session
-(no `wrangler login`, no `gh`, no API token, no stored GitHub credential), so
-I could not run the account-level steps below. Everything else (all app
-code, schema, config) is done and committed locally in this folder
-(`C:\Users\Domje\Documents\tnf`, one commit on `main`, remote `origin`
-already set to `https://github.com/Domje/tnf.git`). Do these in order:
+Everything is set up and live:
 
-1. **Push to GitHub** — `git push` failed here with "Authentication failed"
-   (no credentials available in this session). Run this from this folder —
-   it should prompt your usual GitHub sign-in (a browser popup via Git
-   Credential Manager):
-   ```bash
-   git push -u origin main
-   ```
+- Repo pushed to `https://github.com/Domje/tnf` (`main`)
+- D1 database `thoughts-and-feelings-db` created and schema applied
+- Cloudflare Pages project `thoughts-and-feelings` created, connected to
+  GitHub, `DB` bound for both production and preview
+- Cloudflare Access application created for the production domain, allowing
+  only `dom.haughton@gmail.com`
+- First deployment succeeded; `/api/tasks` and `/api/entries` verified live
 
-2. **Create the D1 database and apply the schema:**
-   ```bash
-   npx wrangler login
-   npx wrangler d1 create thoughts-and-feelings-db
-   ```
-   Copy the `database_id` it prints into `wrangler.toml` (replace
-   `REPLACE_WITH_DATABASE_ID`), then apply the schema to the **remote** database:
-   ```bash
-   npx wrangler d1 execute DB --remote --file=schema.sql
-   ```
-   Commit and push the updated `wrangler.toml`.
-
-3. **Create the Cloudflare Pages project** connected to GitHub:
-   - Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git
-   - Select the `Domje/tnf` repository (authorise Cloudflare's GitHub App if
-     prompted)
-   - Production branch: `main`
-   - Build command: none / empty
-   - Build output directory: `/` (matches `pages_build_output_dir = "."`)
-   - After creation, go to the project's **Settings → Functions → D1 database
-     bindings** and bind variable name `DB` to the `thoughts-and-feelings-db`
-     database you created in step 2.
-
-4. **Create the Cloudflare Access application:**
-   - Zero Trust dashboard → Access → Applications → Add an application →
-     Self-hosted
-   - Domain: the project's `*.pages.dev` domain (shown on the Pages project
-     page after first deploy)
-   - Policy: Allow, Include → Emails → `dom.haughton@gmail.com` only
-
-5. **Trigger a deployment** (Pages project page → Deployments → retry/deploy,
-   or just push a commit) and confirm:
-   - the site loads at the `pages.dev` URL (behind Access login)
-   - `/api/tasks` and `/api/entries` return `[]` (or your data) rather than an
-     error
-
-Once steps 2–4 are done, everything after that is just `git push`.
+Nothing further is needed from you. Future changes: `git add -A && git commit
+&& git push` — Cloudflare rebuilds and redeploys automatically.
