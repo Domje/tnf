@@ -73,13 +73,16 @@ git push
 ## Setup steps still needed from you
 
 I don't have authenticated access to Cloudflare or GitHub from this session
-(no `wrangler login`, no `gh`, no API token), so I could not run the
-account-level steps. Everything else (all app code, schema, config) is done
-and pushed to `main` — see below. Do these in order:
+(no `wrangler login`, no `gh`, no API token, no stored GitHub credential), so
+I could not run the account-level steps below. Everything else (all app
+code, schema, config) is done and committed locally in this folder
+(`C:\Users\Domje\Documents\tnf`, one commit on `main`, remote `origin`
+already set to `https://github.com/Domje/tnf.git`). Do these in order:
 
-1. **Push access** — confirm the repo push in this session actually reached
-   `https://github.com/Domje/tnf.git` (see note at the end of this session's
-   summary). If it didn't, push manually from this folder:
+1. **Push to GitHub** — `git push` failed here with "Authentication failed"
+   (no credentials available in this session). Run this from this folder —
+   it should prompt your usual GitHub sign-in (a browser popup via Git
+   Credential Manager):
    ```bash
    git push -u origin main
    ```
