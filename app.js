@@ -173,6 +173,7 @@ function bindNav(root) {
 
 function renderHome() {
   app.innerHTML =
+    '<div class="home-kicker">Voice &amp; text</div>' +
     '<div class="home-title">Thoughts and Feelings</div>' +
     '<div class="home-grid">' +
       '<button class="home-tile" data-nav="/journal">' + icon('bookHeart') + '<span>Journal</span></button>' +
