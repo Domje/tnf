@@ -5,4 +5,4 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "DB"
 database_name = "thoughts-and-feelings-db"
-database_id = "REPLACE_WITH_DATABASE_ID"
+database_id = "42474d48-3b37-4e33-a684-bceca6aadf42"
