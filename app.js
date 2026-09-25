@@ -5,7 +5,7 @@ var currentCleanup = null;
 var ICONS = {
   bookHeart: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="M8.62 9.8A2.25 2.25 0 1 1 12 6.836a2.25 2.25 0 1 1 3.38 2.966l-2.626 2.856a.998.998 0 0 1-1.507 0z"/>',
   listTodo: '<path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/><path d="m3 17 2 2 4-4"/><rect x="3" y="4" width="6" height="6" rx="1"/>',
-  squareCheckBig: '<path d="M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344"/><path d="m9 11 3 3L22 4"/>',
+  notebookPen: '<path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/>',
   squarePen: '<path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>',
   mic: '<path d="M12 19v3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><rect x="9" y="2" width="6" height="13" rx="3"/>',
   pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
@@ -159,7 +159,7 @@ function topbar(title, opts) {
   var action = opts.actionIcon
     ? '<button class="topbar-action" data-action="' + opts.actionName + '">' + icon(opts.actionIcon) + '</button>'
     : '<span class="topbar-action"></span>';
-  return '<div class="topbar">' + back + '<h1>' + escapeHtml(title) + '</h1>' + action + '</div>';
+  return '<div class="topbar" aria-label="' + escapeHtml(title) + '">' + back + '<span class="topbar-spacer"></span>' + action + '</div>';
 }
 
 function bindNav(root) {
@@ -173,13 +173,11 @@ function bindNav(root) {
 
 function renderHome() {
   app.innerHTML =
-    '<div class="home-kicker">Voice &amp; text</div>' +
-    '<div class="home-title">Thoughts and Feelings</div>' +
     '<div class="home-grid">' +
-      '<button class="home-tile" data-nav="/journal">' + icon('bookHeart') + '<span>Journal</span></button>' +
-      '<button class="home-tile" data-nav="/tasks">' + icon('listTodo') + '<span>Tasks</span></button>' +
-      '<button class="home-tile" data-nav="/journal/new">' + icon('squareCheckBig') + '<span>New entry</span></button>' +
-      '<button class="home-tile" data-nav="/tasks/new">' + icon('squarePen') + '<span>New task</span></button>' +
+      '<button class="home-tile" data-nav="/journal">' + icon('bookHeart') + '</button>' +
+      '<button class="home-tile" data-nav="/tasks">' + icon('listTodo') + '</button>' +
+      '<button class="home-tile" data-nav="/journal/new">' + icon('notebookPen') + '</button>' +
+      '<button class="home-tile" data-nav="/tasks/new">' + icon('squarePen') + '</button>' +
     '</div>';
   bindNav();
 }
@@ -189,10 +187,6 @@ function renderJournalList() {
   bindNav();
   var listEl = document.getElementById('list');
   api('/entries').then(function (entries) {
-    if (!entries.length) {
-      listEl.innerHTML = '<div class="empty-state">No entries yet.</div>';
-      return;
-    }
     listEl.innerHTML = entries.map(function (e) {
       return '<div class="entry-card">' +
         '<div class="entry-card-body" data-nav="/journal/' + e.id + '">' +
@@ -203,9 +197,7 @@ function renderJournalList() {
       '</div>';
     }).join('');
     bindNav(listEl);
-  }).catch(function () {
-    listEl.innerHTML = '<div class="empty-state">Couldn\'t load entries.</div>';
-  });
+  }).catch(function () {});
 }
 
 function renderJournalView(id) {
@@ -215,9 +207,7 @@ function renderJournalView(id) {
   document.querySelector('[data-action="edit"]').addEventListener('click', function () { nav('/journal/' + id + '/edit'); });
   api('/entries/' + id).then(function (entry) {
     document.getElementById('content').innerHTML = sanitizeHtml(entry.content);
-  }).catch(function () {
-    document.getElementById('content').textContent = "Couldn't load entry.";
-  });
+  }).catch(function () {});
 }
 
 function renderJournalEditor(id, initialHtml) {
@@ -271,10 +261,9 @@ function renderAddChooser(kind) {
   app.innerHTML = topbar(kind === 'journal' ? 'New entry' : 'New task') +
     '<main>' +
       '<div class="chooser">' +
-        (supported ? '<button class="chooser-btn" data-nav="' + base + '/new/voice">' + icon('mic') + '<span>Speak</span></button>' : '') +
-        '<button class="chooser-btn" data-nav="' + base + '/new/text">' + icon('pencil') + '<span>Write</span></button>' +
+        (supported ? '<button class="chooser-btn" data-nav="' + base + '/new/voice">' + icon('mic') + '</button>' : '') +
+        '<button class="chooser-btn" data-nav="' + base + '/new/text">' + icon('pencil') + '</button>' +
       '</div>' +
-      (supported ? '' : '<div class="unsupported-note">Voice input isn\'t supported in this browser.</div>') +
     '</main>';
   bindNav();
 }
@@ -291,8 +280,7 @@ function renderVoiceCapture(kind) {
     main.innerHTML =
       '<div class="voice-screen">' +
         '<div class="mic-indicator listening">' + icon('mic') + '</div>' +
-        '<div class="transcript' + (shown ? ' has-text' : '') + '">' + (shown ? escapeHtml(shown) : 'Listening…') + '</div>' +
-        '<div class="voice-hint">Tap stop when you\'re done</div>' +
+        '<div class="transcript' + (shown ? ' has-text' : '') + '">' + escapeHtml(shown) + '</div>' +
         '<button class="stop-btn" id="stop">' + icon('x') + '</button>' +
       '</div>';
     document.getElementById('stop').addEventListener('click', stop);
@@ -303,7 +291,7 @@ function renderVoiceCapture(kind) {
     var displayText = kind === 'journal' ? formatted.join('\n\n') : formatted;
     main.innerHTML =
       '<div class="voice-screen">' +
-        '<div class="transcript has-text">' + (escapeHtml(displayText) || '(nothing captured)') + '</div>' +
+        '<div class="transcript has-text">' + escapeHtml(displayText) + '</div>' +
         '<div class="review-actions">' +
           '<button class="round-btn" id="discard">' + icon('x') + '</button>' +
           '<button class="round-btn" id="editText">' + icon('squarePen') + '</button>' +
@@ -312,7 +300,7 @@ function renderVoiceCapture(kind) {
       '</div>';
 
     document.getElementById('discard').addEventListener('click', function () {
-      nav(kind === 'journal' ? '/journal/new' : '/tasks/new');
+      nav(backTo);
     });
 
     document.getElementById('editText').addEventListener('click', function () {
@@ -346,17 +334,19 @@ function renderVoiceCapture(kind) {
     renderReview();
   }
 
+  var backTo = kind === 'journal' ? '/journal/new' : '/tasks/new';
+
   var recognizer = createRecognizer(
     function (f, interim) { finalText = f; if (phase === 'listening') renderListening(interim); },
-    function (errCode) {
+    function () {
       if (phase !== 'listening') return;
       phase = 'error';
-      main.innerHTML = '<div class="unsupported-note">Couldn\'t access the microphone (' + escapeHtml(errCode) + ').</div>';
+      nav(backTo);
     }
   );
 
   if (!recognizer) {
-    main.innerHTML = '<div class="unsupported-note">Voice input isn\'t supported in this browser.</div>';
+    nav(backTo);
     return;
   }
 
@@ -384,7 +374,7 @@ function renderTasksList() {
   }
 
   function renderEmptyIfNeeded() {
-    if (!tasks.length) listEl.innerHTML = '<div class="empty-state">No tasks yet.</div>';
+    if (!tasks.length) listEl.innerHTML = '';
   }
 
   function wireTaskRow(row) {
@@ -436,9 +426,7 @@ function renderTasksList() {
     }
     listEl.innerHTML = tasks.map(taskRowHtml).join('');
     listEl.querySelectorAll('.task-row').forEach(wireTaskRow);
-  }).catch(function () {
-    listEl.innerHTML = '<div class="empty-state">Couldn\'t load tasks.</div>';
-  });
+  }).catch(function () {});
 
   newInput.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter') return;
@@ -448,7 +436,6 @@ function renderTasksList() {
     newInput.value = '';
     var optimisticTask = { id: 'tmp-' + Date.now(), text: text, done: 0 };
     tasks.push(optimisticTask);
-    if (listEl.querySelector('.empty-state')) listEl.innerHTML = '';
     var wrap = document.createElement('div');
     wrap.innerHTML = taskRowHtml(optimisticTask);
     var rowEl = wrap.firstElementChild;
